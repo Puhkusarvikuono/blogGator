@@ -5,6 +5,7 @@ import (
 	"github.com/Puhkusarvikuono/blogGator/internal/config"
 	"errors"
 	"os"
+	"log"
 )
 
 type state struct {
@@ -34,9 +35,12 @@ func handlerLogin(s *state, cmd command) error {
 	}
 
 	login := cmd.Args[0]
+	
+	err := s.ConfigPtr.SetUser(login)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 
-	s.ConfigPtr.UserName = login
-	//possibility of error?
 	fmt.Println("The user has been set:", login)
 	return nil
 }
@@ -56,14 +60,14 @@ func main() {
 	if len(args) > 2 {
 		newCommand.Args = args[2:]
 	}
-
-	newConfig := config.Config {
-		URL: "https://this.com",
-		UserName: "newUser",
+	
+	cfg, err := config.ReadConfigJson()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
 	}
 
 	newState := &state{
-		ConfigPtr:	&newConfig,
+		ConfigPtr:	&cfg,
 	}
 
 	
@@ -81,27 +85,4 @@ func main() {
 			fmt.Println("Invalid command")
 			os.Exit(1)
 	}
-	
-
-
-//	cfg, err := config.ReadConfigJson()
-//	if err != nil {
-//		log.Fatalf("Error: %v", err)
-//	}
-//
-//	fmt.Println(cfg)
-//
-//	err = cfg.SetUser("puhku")
-//	if err != nil {
-//		log.Fatalf("Error: %v", err)
-//	}
-//
-//
-//	cfg, err = config.ReadConfigJson()
-//	if err != nil {
-//		log.Fatalf("Error: %v", err)
-//	}
-//
-//	fmt.Println(cfg)
-//
 }
