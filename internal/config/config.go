@@ -1,66 +1,62 @@
 package config
 
 import (
-	"os"
-	"log"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"log"
+	"os"
 )
 
 type Config struct {
-	URL					string			`json:"db_url"`
-	UserName		string			`json:"current_user_name"`
+	DBURL           string `json:"db_url"`
+	CurrentUserName string `json:"current_user_name"`
 }
 
-func ReadConfigJson() (Config, error) {
+func Read() (Config, error) {
 	newConfig := Config{}
 
-	filePath, err := getConfigFilePath() 
+	filePath, err := getConfigFilePath()
 	if err != nil {
 		return Config{}, nil
 	}
 
 	dat, err := os.ReadFile(filePath)
-
 	if err != nil {
 		return Config{}, err
 	}
 
 	if err := json.Unmarshal(dat, &newConfig); err != nil {
-    log.Fatalf("Error unmarshalling JSON: %v", err)
-  }
+		log.Fatalf("Error unmarshalling JSON: %v", err)
+	}
 
 	return newConfig, nil
-
 }
 
 func getConfigFilePath() (string, error) {
 	const configFileName = "/.gatorconfig.json"
 	homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
+	if err != nil {
+		return "", err
+	}
 	return homeDir + configFileName, nil
-
 }
 
-func (c *Config) SetUser(currentUserName string) error {
-		c.UserName = currentUserName
+func (cfg *Config) SetUser(userName string) error {
+	cfg.CurrentUserName = userName
 
-		jsonData, err := json.MarshalIndent(c, "", "	")
-    if err != nil {
-      log.Fatal(err)
-    }
+	jsonData, err := json.MarshalIndent(cfg, "", "	")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		filePath, err := getConfigFilePath()
-		if err != nil {
-			return err
-		}
+	filePath, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
 
-		if err = os.WriteFile(filePath, jsonData, 0644); err != nil {
-			return fmt.Errorf("write config: %w", err)
-		}
+	if err = os.WriteFile(filePath, jsonData, 0o644); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
 
-		return nil
-
+	return nil
 }
