@@ -15,6 +15,6 @@ func handlerAgg(_ *state, cmd command) error {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	println(&RSSFeed)
+	fmt.Println(*RSSFeed)
 	return nil
 }
