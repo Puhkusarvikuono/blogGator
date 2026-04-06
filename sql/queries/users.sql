@@ -12,6 +12,10 @@ RETURNING *;
 select * from users
 where name = $1 limit 1;
 
+-- name: GetIDName :one
+select * from users
+where id = $1 limit 1;
+
 -- name: Reset :exec
 DELETE FROM users;
 
