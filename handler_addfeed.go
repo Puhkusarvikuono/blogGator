@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) < 2 {
 		return errors.New("the handler expects a two arguments, the name and url of the feed")
 	}
@@ -31,8 +31,23 @@ func handlerAddFeed(s *state, cmd command) error {
 		UserID:    user.ID,
 	})
 	if err != nil {
-		fmt.Println("Feed link unsuccesful")
+		fmt.Println("Feed link unsuccessful")
 		os.Exit(1)
+	}
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
+
+	if err != nil {
+		fmt.Println("Feed follow unsuccessful.")
+	} else {
+		fmt.Println("Feed follow successful.")
+		fmt.Println(feedFollow)
 	}
 
 	fmt.Println("Feed linked successfully")
