@@ -1,20 +1,29 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
+	"time"
+	"os"
 )
 
-func handlerAgg(_ *state, cmd command) error {
-	if len(cmd.Args) > 0 {
-		fmt.Println("agg takes no arguments")
+func handlerAgg(s *state, cmd command) error {
+	if len(cmd.Args) < 1 {
+		fmt.Println("agg takes a single argument: time between requests")
+		os.Exit(1)
 	}
-	feedURL := "https://www.wagslane.dev/index.xml"
-	RSSFeed, err := fetchFeed(context.Background(), feedURL)
+	
+	timeBetweenRequests, err := time.ParseDuration(cmd.Args[0])
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return fmt.Errorf("invalid duration: %w", err)
 	}
-	fmt.Println(*RSSFeed)
+	ticker := time.NewTicker(timeBetweenRequests)
+
+	for ; ; <-ticker.C {
+		err := scrapeFeeds(s)
+		if err != nil {
+			fmt.Println("error fetching feed:", err)
+		}
+		fmt.Printf("next fetch in %v \n", timeBetweenRequests)
+	}
 	return nil
 }
