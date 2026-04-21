@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/Puhkusarvikuono/blogGator/internal/database"
 	"database/sql"
+	"github.com/google/uuid"
 )
 
 func scrapeFeeds(s *state) error {
@@ -31,12 +32,44 @@ func scrapeFeeds(s *state) error {
 	if err != nil {
 		return err
 	}
-	
-	// iterate and print the titles
-	fmt.Println("fetching feed at", time.Now())
+  
+	scrapeCount := 0
+
 	for _, item := range rss.Channel.Item {
-		fmt.Printf("Feed Title: %s\n", item.Title)
+		pubDate, _ := parseTime(item.PubDate)
+		_, err := s.db.CreatePost(context.Background(), database.CreatePostParams {
+			ID:					uuid.New(),
+			CreatedAt:	time.Now(),
+			UpdatedAt:	time.Now(),
+			Title:			item.Title,
+			Url:				item.Link,
+			Description:	sql.NullString{String: item.Description, Valid: true},
+			PublishedAt:	sql.NullTime{Time:pubDate, Valid: true},
+			FeedID:			feed.ID,
+		})
+		if err != nil {
+			continue
+		}
+		scrapeCount += 1 
 	}
-	fmt.Printf("found %d posts. ", len(rss.Channel.Item))
+
+	fmt.Printf("Successfully created %d posts\n", scrapeCount)
+
 	return nil
+}
+
+func parseTime(s string) (time.Time, error) {
+    formats := []string{
+        time.RFC1123Z,
+        time.RFC1123,
+        time.RFC3339,
+        // add more as you encounter them
+    }
+    for _, format := range formats {
+        t, err := time.Parse(format, s)
+        if err == nil {
+            return t, nil
+        }
+    }
+    return time.Time{}, fmt.Errorf("could not parse time: %s", s)
 }
